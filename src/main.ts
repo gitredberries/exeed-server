@@ -89,8 +89,9 @@ async function bootstrap() {
       console.log(error)
     })
 
-    await app.listen(toNumber(process.env.SERVER_PORT || 3000))
-    logger.log('Application is running on: http://localhost:3000')
+    const port = toNumber(process.env.PORT || process.env.SERVER_PORT || 3000)
+    await app.listen(port, '0.0.0.0')
+    logger.log(`Application is running on port ${port}`)
   } catch (error) {
     logger.error('Failed to start application:')
     logger.error(error)

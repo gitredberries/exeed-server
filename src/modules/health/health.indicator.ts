@@ -39,6 +39,10 @@ export class RedisHealthIndicator extends HealthIndicator {
   }
 
   async isHealthy(): Promise<HealthIndicatorResult> {
+    // In-memory fallback mode counts as healthy (no Redis addon configured)
+    if ((this.redisService as any).isInMemoryMode) {
+      return this.getStatus('redis', true, { message: 'using in-memory fallback' })
+    }
     const status = this.redisService.status
     return this.getStatus('redis', status === 'ready', {
       message: `current status is ${status}`,
