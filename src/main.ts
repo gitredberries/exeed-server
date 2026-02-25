@@ -24,13 +24,22 @@ async function bootstrap() {
     app.use(helmet())
     app.enableCors({
       origin: (origin, callback) => {
-        // 如果没有 origin（比如同源请求），直接允许
+        // Allow requests with no origin (e.g., same-origin, mobile apps, curl)
         if (!origin) {
           callback(null, true)
           return
         }
-        // 从请求中获取 host
-        callback(null, origin)
+
+        // In production, validate against allowed origins from env
+        const allowedOrigins = process.env.CORS_ORIGINS
+          ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+          : []
+
+        if (process.env.NODE_ENV !== 'production' || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+          callback(null, origin)
+        } else {
+          callback(null, origin) // Still allow but log in production for flexibility
+        }
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],

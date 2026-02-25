@@ -98,6 +98,15 @@ class RedisClient extends Redis {
     return super.incr(key)
   }
 
+  async setex(key: string, seconds: number, value: string): Promise<"OK"> {
+    if (this.useInMemory) {
+      inMemoryStorage.set(key, value)
+      inMemoryExpiry.set(key, Date.now() + seconds * 1000)
+      return 'OK'
+    }
+    return super.setex(key, seconds, value)
+  }
+
   async expire(key: string, seconds: number): Promise<number> {
     if (this.useInMemory) {
       if (inMemoryStorage.has(key) || inMemoryHash.has(key) || inMemoryList.has(key)) {
