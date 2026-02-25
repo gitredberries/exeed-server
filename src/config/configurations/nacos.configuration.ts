@@ -113,7 +113,8 @@ export const loadNacosConfig = async (): Promise<PlatformConfig> => {
       const hasSingleNode = nacosConfigs.redis.host && nacosConfigs.redis.port
 
       if (!hasCluster && !hasSingleNode) {
-        throw new Error('Redis配置错误：必须配置集群模式(cluster.nodes)或单节点模式(host+port)中的一种')
+        // No Redis configured — RedisService will fall back to in-memory mode
+        console.warn('Redis not configured: will use in-memory fallback (no cluster.nodes or host+port)')
       }
 
       if (hasCluster && hasSingleNode) {
