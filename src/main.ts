@@ -21,7 +21,9 @@ async function bootstrap() {
       logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     })
 
-    app.use(helmet())
+    app.use(helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }))
     app.enableCors({
       origin: (origin, callback) => {
         // Allow requests with no origin (e.g., same-origin, mobile apps, curl)
@@ -36,14 +38,14 @@ async function bootstrap() {
           : []
 
         if (process.env.NODE_ENV !== 'production' || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-          callback(null, origin)
+          callback(null, true)
         } else {
-          callback(null, origin) // Still allow but log in production for flexibility
+          callback(null, true) // Allow all origins for flexibility
         }
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-      allowedHeaders: '*',
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     })
     logger = app.get(WINSTON_MODULE_NEST_PROVIDER)
     app.useLogger(logger)
