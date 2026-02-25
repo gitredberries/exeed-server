@@ -10,7 +10,7 @@ import { ExceptionsFilter } from '@core/filters/exceptions.filter'
 import { TransformInterceptor } from '@core/interceptors/transform.interceptor'
 import basicAuth from 'express-basic-auth'
 async function bootstrap() {
-  let logger
+  let logger: any
   try {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -93,9 +93,11 @@ async function bootstrap() {
     await app.listen(port, '0.0.0.0')
     logger.log(`Application is running on port ${port}`)
   } catch (error) {
-    logger.error('Failed to start application:')
-    logger.error(error)
-    console.log(error)
+    const errLogger = logger || console
+    errLogger.error('Failed to start application:')
+    errLogger.error(error)
+    console.error('STARTUP ERROR:', error)
+    process.exit(1)
   }
 }
 
