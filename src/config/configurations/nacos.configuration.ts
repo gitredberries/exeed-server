@@ -17,23 +17,44 @@ function parseYml(content: string) {
   return yaml.parse(content)
 }
 
+/**
+ * Robustly parse a mysql:// URL into its components.
+ * Handles passwords with special characters, query parameters, etc.
+ */
+function parseMySqlUrl(url: string): { username: string; password: string; host: string; port: string; database: string } | null {
+  try {
+    // Replace mysql:// with http:// so the standard URL parser can handle it
+    const parsed = new URL(url.replace(/^mysql:\/\//, 'http://'))
+    const database = parsed.pathname.replace(/^\//, '').split('?')[0]
+    if (!parsed.hostname || !parsed.port || !database) return null
+    return {
+      username: decodeURIComponent(parsed.username),
+      password: decodeURIComponent(parsed.password || ''),
+      host: parsed.hostname,
+      port: parsed.port,
+      database,
+    }
+  } catch {
+    return null
+  }
+}
+
 export const loadNacosConfig = async (): Promise<PlatformConfig> => {
   let nacosConfigs: PlatformConfig
   if (!process.env.NACOS_HOST) {
     let dbCfg: DatabaseConfig
     if (process.env.DATABASE_URL?.startsWith('mysql:')) {
-      // mysql://root:123456@localhost:3306/test
-      const [, username, password, host, port, database] =
-        process.env.DATABASE_URL.match(/^mysql:\/\/(.*):(.*)@(.*):(\d+)\/(.*)$/) || []
+      const parsed = parseMySqlUrl(process.env.DATABASE_URL)
 
-      if (!host || !port || !database || !username) {
+      if (!parsed) {
+        console.error('DATABASE_URL parse failed. Value (redacted):', process.env.DATABASE_URL.replace(/\/\/([^:]+):([^@]+)@/, '//$1:***@'))
         throw new Error('DATABASE_URL 格式错误')
       }
 
       dbCfg = {
-        url: `${host}:${port}/${database}`,
-        username,
-        password: password || '',
+        url: `${parsed.host}:${parsed.port}/${parsed.database}`,
+        username: parsed.username,
+        password: parsed.password,
         log_level: ['error'],
       }
     } else {
