@@ -10,6 +10,19 @@ import { ExceptionsFilter } from '@core/filters/exceptions.filter'
 import { TransformInterceptor } from '@core/interceptors/transform.interceptor'
 import basicAuth from 'express-basic-auth'
 async function bootstrap() {
+  console.log('=== SERVER STARTING ===')
+  console.log('NODE_ENV:', process.env.NODE_ENV)
+  console.log('PORT:', process.env.PORT || process.env.SERVER_PORT || 3000)
+  console.log('DATABASE_URL set:', !!process.env.DATABASE_URL)
+  console.log('MYSQL_URL set:', !!process.env.MYSQL_URL)
+  console.log('REDIS_HOST:', process.env.REDIS_HOST || '(not set)')
+
+  // Railway MySQL addon exposes MYSQL_URL; our code reads DATABASE_URL
+  if (!process.env.DATABASE_URL && process.env.MYSQL_URL) {
+    console.log('Mapping MYSQL_URL -> DATABASE_URL')
+    process.env.DATABASE_URL = process.env.MYSQL_URL
+  }
+
   let logger: any
   try {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
