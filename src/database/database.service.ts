@@ -8,10 +8,12 @@ const SOFT_DELETE_MODELS = []
 @Injectable()
 export class DatabaseService extends PrismaClient implements OnModuleInit {
   constructor(private configService: ConfigService) {
+    const dbUrl = `mysql://${encodeURIComponent(configService.get('database.username'))}:${encodeURIComponent(configService.get('database.password'))}@${configService.get('database.url')}`
+    console.log('Prisma connecting to:', dbUrl.replace(/:([^:@]+)@/, ':***@'))
     super({
       datasources: {
         db: {
-          url: `mysql://${encodeURIComponent(configService.get('database.username'))}:${encodeURIComponent(configService.get('database.password'))}@${configService.get('database.url')}`,
+          url: dbUrl,
         },
       },
       log: configService.get('database.log_level'),
@@ -44,7 +46,21 @@ export class DatabaseService extends PrismaClient implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.$connect()
+    const maxRetries = 5
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await this.$connect()
+        console.log('Database connected successfully')
+        return
+      } catch (error) {
+        console.error(`Database connection attempt ${attempt}/${maxRetries} failed:`, error.message)
+        if (attempt === maxRetries) {
+          throw error
+        }
+        // Wait before retrying (exponential backoff: 2s, 4s, 8s, 16s)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000))
+      }
+    }
   }
 
   private setupPrismaMiddleware() {
