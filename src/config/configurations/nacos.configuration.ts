@@ -75,12 +75,13 @@ export const loadNacosConfig = async (): Promise<PlatformConfig> => {
     }
   }
 
-  if (nacosConfigs.database.url.startsWith('mysql:')) {
-    const [, username, password, host, port, database] =
-      nacosConfigs.database.url.match(/^mysql:\/\/(.*):(.*)@(.*):(\d+)\/(.*)$/) || []
-    nacosConfigs.database.url = `${host}:${port}/${database}`
-    nacosConfigs.database.username = username
-    nacosConfigs.database.password = password
+  if (nacosConfigs.database.url?.startsWith('mysql:')) {
+    const parsed = parseMySqlUrl(nacosConfigs.database.url)
+    if (parsed) {
+      nacosConfigs.database.url = `${parsed.host}:${parsed.port}/${parsed.database}`
+      nacosConfigs.database.username = parsed.username
+      nacosConfigs.database.password = parsed.password
+    }
   }
 
   const cfgs = {

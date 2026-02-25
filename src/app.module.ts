@@ -80,9 +80,11 @@ import { ApiLogInterceptor } from '@core/interceptors/api-log.interceptor'
         fallbackLanguage: 'en-GB',
         loaderOptions: {
           path: join(__dirname, '/i18n/'),
-          watch: true,
+          watch: process.env.NODE_ENV !== 'production',
         },
-        typesOutputPath: join(process.cwd(), 'src/types/i18n.generated.ts'),
+        ...(process.env.NODE_ENV !== 'production' && {
+          typesOutputPath: join(process.cwd(), 'src/types/i18n.generated.ts'),
+        }),
       }),
       resolvers: [new QueryResolver(['lang']), new HeaderResolver(['x-custom-lang']), AcceptLanguageResolver],
     }),

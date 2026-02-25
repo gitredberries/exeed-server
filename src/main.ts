@@ -20,6 +20,7 @@ async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     })
+    console.log('NestJS app created successfully, configuring middleware...')
 
     app.use(helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },

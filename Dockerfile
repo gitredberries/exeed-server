@@ -42,8 +42,8 @@ RUN npx prisma generate
 # Copy build output from builder stage
 COPY --from=builder /usr/src/app/dist ./dist
 
-# Create upload directory
-RUN mkdir -p upload
+# Create upload and logs directories
+RUN mkdir -p upload logs
 
 EXPOSE 3000
 
